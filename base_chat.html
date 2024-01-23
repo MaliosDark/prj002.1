@@ -19,6 +19,67 @@
             background-size: cover;
         }
 
+        header {
+            background-color: #0A0664;
+            color: #a8a9b3;
+            padding: 10px 0;
+        }
+
+        /* Colors for Navbar */
+            .navbar-brand:hover,
+            .nav-item > .button-filled:hover,
+            .nav-link:hover,
+            li .bi:hover,
+            #branding {
+                color: #FF52B4;
+            }
+
+            .navbar-brand,
+            .nav-link,
+            .navbar-toggler-icon,
+            .navbar-toggler,
+            li .bi {
+                color: #4CEDDD;
+            }
+
+            .nav-link:focus {
+                text-decoration: underline;
+            }
+
+            /* Active Link Styles */
+            .navbar-nav .nav-link.active,
+            .navbar-nav .nav-link.show {
+                color: #FF52B4;
+            }
+
+            /* Navbar Logo */
+            .nav-logo-img {
+                content: url('../img/logo/logo-main-sm.png');
+            }
+
+            /* Navbar Specifications */
+            .navbar-brand {
+                padding: 0;
+                height: 120px;
+                align-items: center;
+            }
+
+            .navbar-brand {
+                padding: 0;
+            }
+
+            .navbar-brand ul {
+                text-align: right;
+                
+            }
+            .nav-item > .button-filled {
+                color: #0A0664;
+            }
+
+            .navbar-toggler-icon {
+                color: #FF52B4;
+            }
+
         .dream-container {
             flex: 1;
             display: flex;
@@ -42,6 +103,13 @@
             border-radius: 10px;
             padding: 10px;
             background: #f1f1f1;
+        }
+
+        .comment-box p {
+            color: #0A0664;
+            margin-top: 75px;
+            padding-top: 0.7em;
+            margin-bottom: 30px;
         }
 
         .dream-attributes {
@@ -175,6 +243,54 @@
 </head>
 
 <body>
+    <header class="p-0">
+        <!-- NAV -->
+        <nav class="navbar navbar-expand-md m-0 p-0" aria-label="navigation">
+            <div class="container-fluid p-0" id="navig">
+                <!-- Hamburger button -->
+                <button class="navbar-toggler order-md-2 m-2" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbar-items" aria-controls="navbar-items" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <svg class="navbar-toggler-icon bi bi-list" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                        fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd"
+                            d="M2.5 12a.5.5 0 0 1 .5-.5h20a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h20a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5m0-4a.5.5 0 0 1 .5-.5h20a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5" />
+                    </svg>
+                </button>
+                <!-- Logo -->
+                <div class="ms-center order-md-0">
+                    <a target="_blank" class="navbar-brand m-0" href="index.html"><img class="nav-logo-img" src="null"
+                            alt="logo DreamsReader.com"></a>
+                </div>
+                <!-- Items menu -->
+                <div class="collapse navbar-collapse order-md-1 justify-content-center mx-3" id="navbar-items">
+                    <ul class="navbar-nav ms-auto">
+                        <!-- item #1 -->
+                        <li class="nav-item py-3">
+                            <a target="_blank" class="nav-link active" aria-current="page" href="index.html">Home</a>
+                        </li>
+                        <!-- item #2 -->
+                        <li class="nav-item py-3">
+                            <a target="_blank" class="nav-link" href="diary.html">Diary Example</a>
+                        </li>
+                        <li class="nav-item py-3">
+                            <a target="_blank" class="nav-link" href="base_chat.html">Read Now</a>
+                        </li>
+                        <!-- item #3 -->
+                        <li class="nav-item py-3">
+                            <a target="_blank" class="nav-link" href="contact-us.html">Contact us</a>
+                        </li>
+                        <!-- item #4 -->
+                        <li class="nav-item py-3">
+                            <!-- <a target="_blank" class="nav-link button button-filled coloured-text-blue rounded-3" href="#">Log in</a> -->
+                            <a target="_blank" class="nav-link btn button-filled add-shadows" href="under-dev.html">Log in</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- END NAV -->
+    </header>
     <div class="container-fluid">
         <div class="row">
             <div class="col-12 col-md-8 mx-auto">
