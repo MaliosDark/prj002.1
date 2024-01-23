@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat with Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Asegúrate de incluir este meta tag para la adaptabilidad en dispositivos móviles -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            background-image: url('https://media1.popsugar-assets.com/files/thumbor/eqT0762q9rmcVD7xUlJzqF2REf8/fit-in/1024x1024/filters:format_auto-!!-:strip_icc-!!-/2021/01/14/843/n/1922507/7aa41d650bb323ac_ales-krivec-In7RdU6QY2M-unsplash/i/Cloud-Zoom-Background.jpg');
+            background-size: cover;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #3f74a3, #80a5d9);
+            box-shadow: 0px 0px 20px 0px #d3d3d3;
+            padding: 20px;
+            overflow: auto; /* Enable vertical scrolling */
+            max-height: 80vh; /* Adjust as needed */
+        }
+        .chat-log {
+            height: 100%;
+            max-height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f1f1f1;
+        }
+        .message {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .user-message {
+            background-color: #DCF8C6;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #D5D8DC;
+            text-align: left;
+        }
+
+        .typing-indicator {
+            color: #fff;
+            display: none;
+            animation: blink 1.4s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .footer {
+            background-color: none;
+            color: #000000;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .audio-button {
+            margin: 0 10px;
+        }
+
+        .mute-status {
+            display: none;
+        }
+
+        #user-upload {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .input-group-append {
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 576px) {
+            .chat-container {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 col-md-8 mx-auto">
+                <div class="chat-container">
+                    <div class="chat-log border rounded p-3 mb-3" id="chat-log"></div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="user-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="button" onclick="sendMessage()">Send</button>
+                        </div>
+                    </div>
+                    <div class="button-group d-flex justify-content-between">
+                        <button class="btn btn-secondary audio-button" onclick="toggleMute()">Mute</button>
+                        <button class="btn btn-secondary audio-button" onclick="repeatLastMessage()">Repeat</button>
+                        <button class="btn btn-danger" onclick="deleteChat()">Delete Chat</button>
+                        <a class="btn btn-success" id="downloadChat" download="chat.txt">Download Conversation</a>
+                    </div>
+                    <div class="typing-indicator">
+                        Bot is typing...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>
+            Made with <span style="color: red;">&#10084;</span> for those who need to talk with someone or something without judgment.
+            
+        </p>
+        <p><a href="https://talk2thrive.help">talk2thrive.help</a>
+        </p>
+    </div>
+    <script>
+        let chatId = '';
+        let chatContent = '';
+        let mute = false;
+        let lastAudioMessage = '';
+
+        async function createChatAndConnect() {
+            const prePrompt = "You are a Dream Reader. you must interprete the dream provided and give your gobal view and opinion about the dream and how to improve the bad dreams.";
+            const url = 'https://mark.aswss.com/api/chat/?model=Zephyr-3B&temperature=0.1&top_k=50&top_p=0.95&max_length=77&context_window=77&repeat_last_n=64&repeat_penalty=1.3&n_threads=8&init_prompt=' + encodeURIComponent(prePrompt) + '&gpu_layers=0';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    chatId = data;
+                    document.getElementById('chat-log').innerHTML += `<div class="message bot-message">Connected to chat with ID: ${chatId}</div>`;
+                } else {
+                    console.error('Request error:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error creating chat:', error);
+            }
+        }
+
+        async function connectToChat(chatId) {
+            // Code to connect to the chat
+        }
+
+        async function sendMessage() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            typingIndicator.style.display = 'block'; // Show the typing animation
+
+            const userInput = document.getElementById('user-input').value;
+            chatContent += `You: ${userInput}\n`;
+            document.getElementById('chat-log').innerHTML += `<div class="message user-message">${userInput}</div>`;
+            document.getElementById('user-input').value = '';
+
+            const chatUrl = `https://mark.aswss.com/api/chat/${chatId}/question?prompt=${encodeURIComponent(userInput)}`;
+
+            try {
+                const response = await fetch(chatUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/plain'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    const cleanMessage = cleanResponse(data);
+
+                    const chatLog = document.getElementById('chat-log');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', 'bot-message');
+
+                    messageDiv.textContent = cleanMessage;
+                    lastAudioMessage = cleanMessage;
+                    chatContent += `Bot: ${cleanMessage}\n`;
+
+                    chatLog.appendChild(messageDiv);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+
+                    if (!mute) {
+                        speak(cleanMessage);
+                    }
+                } else {
+                    const errorMessage = await response.text();
+                    console.error('Request error:', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            } finally {
+                typingIndicator.style.display = 'none'; // Hide the typing animation
+            }
+        }
+
+        function cleanResponse(data) {
+            const cleanData = data.replace(/data:|event: message|event: close/g, '');
+            const removePing = cleanData.replace(/: ping - \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6}/g, '');
+            const trimmedData = removePing.replace(/\s+/g, ' ').trim();
+            const removeInstructions = trimmedData.replace(/##\s?#\s?Instruction\s?:[^#]+/g, '').replace(/##\s?#\s?Response\s?:[^#]+/g, '');
+            const cleanContent = removeInstructions.replace(/##\s?#\s?[^#]+:\s?[^#]+/g, '').trim();
+            return cleanContent;
+        }
+
+        function deleteChat() {
+            chatContent = '';
+            document.getElementById('chat-log').innerHTML = '';
+            lastAudioMessage = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            synth.speak(utterance);
+        }
+
+        function toggleMute() {
+            mute = !mute;
+            const muteStatus = document.querySelector('.mute-status');
+            if (mute) {
+                const synth = window.speechSynthesis;
+                synth.cancel();
+                muteStatus.style.display = 'block';
+            } else {
+                muteStatus.style.display = 'none';
+            }
+        }
+
+        function repeatLastMessage() {
+            if (lastAudioMessage && !mute) {
+                speak(lastAudioMessage);
+            }
+        }
+
+        document.getElementById('downloadChat').addEventListener('click', function() {
+            if (chatContent) {
+                const blob = new Blob([chatContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                this.href = url;
+            } else {
+                this.removeAttribute('href');
+            }
+        });
+
+        window.onload = function() {
+            createChatAndConnect();
+        };
+    </script>
+</body>
+</html>

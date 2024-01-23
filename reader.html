@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interpretación de Sueños</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Estilos CSS... */
+
+        /* Cambios en el diseño de los elementos de la interfaz */
+        /* Estilos para el formulario de entrada y la respuesta del bot */
+        .container-fluid {
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            width: 60%;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            box-shadow: 0px 0px 20px 0px #d3d3d3;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .response-container {
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            padding: 20px;
+            background-color: #f1f1f1;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="form-container">
+            <form id="dreamForm">
+                <div class="form-group">
+                    <label for="dreamInput">Ingresa tu sueño:</label>
+                    <input type="text" class="form-control" id="dreamInput" placeholder="Escribe tu sueño...">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="interpretDream()">Interpretar</button>
+            </form>
+            <div class="response-container" id="botResponse">
+                <h5>Respuesta del Bot:</h5>
+                <div id="chat-log"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let chatId = '';
+        let chatContent = '';
+        let mute = false;
+        let lastAudioMessage = '';
+
+        async function createChatAndConnect() {
+            const prePrompt = "You are a Dream Reader. you must interprete the dream provided and give your gobal view and opinion about the dream and how to improve the bad dreams.";
+            const url = 'https://mark.aswss.com/api/chat/?model=Zephyr-3B&temperature=0.1&top_k=50&top_p=0.95&max_length=77&context_window=77&repeat_last_n=64&repeat_penalty=1.3&n_threads=8&init_prompt=' + encodeURIComponent(prePrompt) + '&gpu_layers=0';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    chatId = data;
+                    document.getElementById('chat-log').innerHTML += `<div class="message bot-message">Connected to chat with ID: ${chatId}</div>`;
+                } else {
+                    console.error('Request error:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error creating chat:', error);
+            }
+        }
+
+        async function connectToChat(chatId) {
+            // Code to connect to the chat
+        }
+
+        async function sendMessage() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            typingIndicator.style.display = 'block'; // Show the typing animation
+
+            const userInput = document.getElementById('user-input').value;
+            chatContent += `You: ${userInput}\n`;
+            document.getElementById('chat-log').innerHTML += `<div class="message user-message">${userInput}</div>`;
+            document.getElementById('user-input').value = '';
+
+            const chatUrl = `https://mark.aswss.com/api/chat/${chatId}/question?prompt=${encodeURIComponent(userInput)}`;
+
+            try {
+                const response = await fetch(chatUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/plain'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.text();
+                    const cleanMessage = cleanResponse(data);
+
+                    const chatLog = document.getElementById('chat-log');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message', 'bot-message');
+
+                    messageDiv.textContent = cleanMessage;
+                    lastAudioMessage = cleanMessage;
+                    chatContent += `Bot: ${cleanMessage}\n`;
+
+                    chatLog.appendChild(messageDiv);
+                    chatLog.scrollTop = chatLog.scrollHeight;
+
+                    if (!mute) {
+                        speak(cleanMessage);
+                    }
+                } else {
+                    const errorMessage = await response.text();
+                    console.error('Request error:', errorMessage);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+            } finally {
+                typingIndicator.style.display = 'none'; // Hide the typing animation
+            }
+        }
+
+        function cleanResponse(data) {
+            const cleanData = data.replace(/data:|event: message|event: close/g, '');
+            const removePing = cleanData.replace(/: ping - \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6}/g, '');
+            const trimmedData = removePing.replace(/\s+/g, ' ').trim();
+            const removeInstructions = trimmedData.replace(/##\s?#\s?Instruction\s?:[^#]+/g, '').replace(/##\s?#\s?Response\s?:[^#]+/g, '');
+            const cleanContent = removeInstructions.replace(/##\s?#\s?[^#]+:\s?[^#]+/g, '').trim();
+            return cleanContent;
+        }
+
+        function deleteChat() {
+            chatContent = '';
+            document.getElementById('chat-log').innerHTML = '';
+            lastAudioMessage = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function speak(text) {
+            const synth = window.speechSynthesis;
+            const utterance = new SpeechSynthesisUtterance(text);
+            synth.speak(utterance);
+        }
+
+        function toggleMute() {
+            mute = !mute;
+            const muteStatus = document.querySelector('.mute-status');
+            if (mute) {
+                const synth = window.speechSynthesis;
+                synth.cancel();
+                muteStatus.style.display = 'block';
+            } else {
+                muteStatus.style.display = 'none';
+            }
+        }
+
+        function repeatLastMessage() {
+            if (lastAudioMessage && !mute) {
+                speak(lastAudioMessage);
+            }
+        }
+
+        document.getElementById('downloadChat').addEventListener('click', function() {
+            if (chatContent) {
+                const blob = new Blob([chatContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                this.href = url;
+            } else {
+                this.removeAttribute('href');
+            }
+        });
+
+        window.onload = function() {
+            createChatAndConnect();
+        };
+    </script>
+</body>
+</html>
